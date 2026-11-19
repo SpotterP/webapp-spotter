@@ -1,6 +1,6 @@
 import { API_URL } from '../config';
 import { loadSession, saveSession } from '../auth/session';
-import type { LoginResponse, User, Workout } from '../types';
+import type { Exercise, ExerciseCategory, LoginResponse, PageInfo, User, Workout } from '../types';
 
 export class ApiError extends Error {
   status: number;
@@ -98,5 +98,30 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ name }),
     }),
+  myWorkout: (id: string) => request<{ workout: Workout }>(`/users/me/workouts/${id}`),
+  updateMyWorkout: (
+    id: string,
+    body: {
+      name: string;
+      description?: string;
+      days: string[];
+      exercises: { exercise: string; sets: number; reps: number }[];
+    },
+  ) =>
+    request<{ workout: Workout }>(`/users/me/workouts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+  exercises: (params: {
+    page: number;
+    limit: number;
+    search?: string;
+    category?: ExerciseCategory | '';
+  }) => {
+    const query = new URLSearchParams({ page: String(params.page), limit: String(params.limit) });
+    if (params.search) query.set('search', params.search);
+    if (params.category) query.set('category', params.category);
+    return request<{ exercises: Exercise[]; pagination: PageInfo }>(`/exercises?${query}`);
+  },
   deleteMyWorkout: (id: string) => request<null>(`/users/me/workouts/${id}`, { method: 'DELETE' }),
 };

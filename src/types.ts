@@ -23,11 +23,32 @@ export type DayOfWeek =
   | 'SATURDAY'
   | 'SUNDAY';
 
+export const EXERCISE_CATEGORY_LABELS = {
+  CHEST: 'Pecho',
+  BACK: 'Espalda',
+  LEGS: 'Piernas',
+  SHOULDERS: 'Hombros',
+  ARMS: 'Brazos',
+  CORE: 'Core',
+  CARDIO: 'Cardio',
+} as const;
+export type ExerciseCategory = keyof typeof EXERCISE_CATEGORY_LABELS;
+export const EXERCISE_CATEGORIES = Object.keys(EXERCISE_CATEGORY_LABELS) as ExerciseCategory[];
+
 export interface Exercise {
   _id: string;
   name: string;
   description?: string;
-  category?: string;
+  category?: ExerciseCategory;
+}
+
+export interface PageInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
 }
 
 export interface WorkoutExercise {
