@@ -10,7 +10,25 @@ export class ApiError extends Error {
   }
 }
 
-const TOKEN_EXPIRED = 'El token ha caducado';
+// El backend marca con este código los 401 de token caducado. El refresco se decide por
+// el código y no por el texto del mensaje: una redacción distinta no debe desloguear.
+const TOKEN_EXPIRED_CODE = 'TOKEN_EXPIRED';
+
+// Respaldo temporal para un backend anterior a los códigos (despliegue escalonado): si el
+// cuerpo no trae `code`, se sigue aceptando el mensaje de siempre. No es el criterio
+// principal y se puede borrar cuando el backend con `code` esté desplegado en producción.
+const TOKEN_EXPIRED_MESSAGE = 'El token ha caducado';
+
+/**
+ * Decide si un 401 es un token caducado que merece renovarse. Manda el `code`; el mensaje
+ * solo cuenta cuando el cuerpo no trae código (backend viejo).
+ */
+function isTokenExpired(body: unknown): boolean {
+  if (!body || typeof body !== 'object') return false;
+  const { code, message } = body as { code?: unknown; message?: unknown };
+  if (typeof code === 'string') return code === TOKEN_EXPIRED_CODE;
+  return message === TOKEN_EXPIRED_MESSAGE;
+}
 
 async function parse(response: Response): Promise<unknown> {
   if (response.status === 204) return null;
@@ -84,7 +102,9 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   let response = await send(path, init, session.token);
   let data = await parse(response);
 
-  if (response.status === 401 && (data as { message?: string } | null)?.message === TOKEN_EXPIRED) {
+  // Solo el token caducado se renueva. Cualquier otro 401 (sesión revocada, token
+  // inválido o ausente) cae abajo, que borra la sesión y propaga el error.
+  if (response.status === 401 && isTokenExpired(data)) {
     const token = await refreshToken();
     response = await send(path, init, token);
     data = await parse(response);
