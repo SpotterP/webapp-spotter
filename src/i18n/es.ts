@@ -47,6 +47,8 @@ export const es = {
   'register.title': 'Crea tu cuenta',
   'register.intro': 'Regístrate para empezar con tus rutinas.',
   'register.passwordHelp': 'Mínimo 8 caracteres.',
+  'register.confirm': 'Repite la contraseña',
+  'register.mismatch': 'Las contraseñas no coinciden.',
   'register.submit': 'Crear cuenta',
   'register.busy': 'Creando…',
   'register.haveAccount': '¿Ya tienes cuenta?',

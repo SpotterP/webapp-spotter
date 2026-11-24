@@ -48,6 +48,8 @@ export const ca: Record<MessageKey, string> = {
   'register.title': 'Crea el teu compte',
   'register.intro': 'Registra-te per començar amb les teves rutines.',
   'register.passwordHelp': 'Mínim 8 caràcters.',
+  'register.confirm': 'Repeteix la contrasenya',
+  'register.mismatch': 'Les contrasenyes no coincideixen.',
   'register.submit': 'Crea el compte',
   'register.busy': 'Creant…',
   'register.haveAccount': 'Ja tens compte?',
