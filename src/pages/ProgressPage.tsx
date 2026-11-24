@@ -1,19 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, ApiError } from '../api/client';
 import { connectRealtime } from '../api/realtime';
+import { useI18n } from '../i18n';
 import type { Progress, TrainingSession } from '../types';
-
-// Fecha y hora de un entrenamiento, por ejemplo "miércoles, 18 de noviembre de 2026, 18:00"
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString('es-ES', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 // Las series de un ejercicio, por ejemplo "10 × 60 kg · 8 × 65 kg"
 function formatSets(sets: TrainingSession['exercises'][number]['sets']): string {
@@ -21,6 +10,8 @@ function formatSets(sets: TrainingSession['exercises'][number]['sets']): string 
 }
 
 export function ProgressPage() {
+  const { t } = useI18n();
+  const { formatDateTime } = useI18n();
   const [progress, setProgress] = useState<Progress | null>(null);
   const [sessions, setSessions] = useState<TrainingSession[]>([]);
   // Nombre de cada rutina por su id, para enseñar la rutina de cada entrenamiento
@@ -38,9 +29,9 @@ export function ProgressPage() {
           setError(null);
         })
         .catch((e) => {
-          setError(e instanceof ApiError ? e.message : 'No se ha podido cargar el progreso');
+          setError(e instanceof ApiError ? e.message : t('errors.loadProgress'));
         }),
-    [],
+    [t],
   );
 
   useEffect(() => {
@@ -64,47 +55,47 @@ export function ProgressPage() {
   // Nombre de la rutina de un entrenamiento. Sin rutina, es un entrenamiento libre.
   // Si tiene rutina pero ya no está en la lista, es que se borró.
   function routineName(session: TrainingSession): string {
-    if (!session.workout) return 'Entrenamiento libre';
-    return workoutNames[session.workout] ?? 'Rutina borrada';
+    if (!session.workout) return t('progress.free');
+    return workoutNames[session.workout] ?? t('progress.deleted');
   }
 
   return (
     <>
-      <h1 className="display-lg">Progreso</h1>
+      <h1 className="display-lg">{t('progress.title')}</h1>
 
       {error && (
         <p className="notice notice--error" role="alert">
           {error}
         </p>
       )}
-      {!error && !progress && <p className="muted">Cargando…</p>}
+      {!error && !progress && <p className="muted">{t('common.loading')}</p>}
 
       {progress && (
         <>
           <ul className="stats">
             <li className="stat">
               <span className="stat__value">{progress.totalSessions}</span>
-              <span className="stat__label">Entrenamientos</span>
+              <span className="stat__label">{t('progress.sessions')}</span>
             </li>
             <li className="stat">
               <span className="stat__value">{progress.trainedDays.length}</span>
-              <span className="stat__label">Días entrenados</span>
+              <span className="stat__label">{t('progress.days')}</span>
             </li>
             <li className="stat">
               <span className="stat__value">{progress.exercises.length}</span>
-              <span className="stat__label">Ejercicios distintos</span>
+              <span className="stat__label">{t('progress.distinct')}</span>
             </li>
           </ul>
 
           {progress.exercises.length > 0 && (
             <>
-              <h2 className="display-sm section-title">Ejercicios hechos</h2>
+              <h2 className="display-sm section-title">{t('progress.done')}</h2>
               <ul className="cards">
                 {progress.exercises.map((item) => (
                   <li key={item.exercise._id} className="card card--row">
                     <span>{item.exercise.name}</span>
                     <span className="status">
-                      {item.timesDone} {item.timesDone === 1 ? 'vez' : 'veces'}
+                      {t(item.timesDone === 1 ? 'progress.timeOne' : 'progress.timeMany', { n: item.timesDone })}
                     </span>
                   </li>
                 ))}
@@ -112,15 +103,15 @@ export function ProgressPage() {
             </>
           )}
 
-          <h2 className="display-sm section-title">Mis entrenamientos</h2>
+          <h2 className="display-sm section-title">{t('progress.mine')}</h2>
           {sessions.length === 0 ? (
-            <p className="empty">Todavía no has terminado ningún entrenamiento.</p>
+            <p className="empty">{t('progress.none')}</p>
           ) : (
             <ul className="cards">
               {sessions.map((session) => (
                 <li key={session._id} className="card">
                   <h3 className="display-sm">{routineName(session)}</h3>
-                  <p className="body-sm muted">{formatDate(session.startedAt)}</p>
+                  <p className="body-sm muted">{formatDateTime(session.startedAt)}</p>
                   {session.exercises
                     .filter((item) => item.exercise)
                     .map((item) => (

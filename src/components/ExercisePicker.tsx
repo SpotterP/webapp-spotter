@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../api/client';
-import { EXERCISE_CATEGORIES, EXERCISE_CATEGORY_LABELS } from '../types';
+import { useI18n } from '../i18n';
+import { EXERCISE_CATEGORIES } from '../types';
 import type { Exercise, ExerciseCategory, PageInfo } from '../types';
 
 const PAGE_SIZE = 8;
@@ -17,6 +18,7 @@ export function ExercisePicker({
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const { t } = useI18n();
   const [text, setText] = useState('');
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<ExerciseCategory | ''>('');
@@ -53,13 +55,13 @@ export function ExercisePicker({
       })
       .catch((e) => {
         if (!cancelled) {
-          setError(e instanceof ApiError ? e.message : 'No se ha podido cargar el catálogo');
+          setError(e instanceof ApiError ? e.message : t('errors.loadCatalog'));
         }
       });
     return () => {
       cancelled = true;
     };
-  }, [open, page, search, category]);
+  }, [open, page, search, category, t]);
 
   return (
     <dialog
@@ -69,22 +71,22 @@ export function ExercisePicker({
       aria-labelledby="picker-title"
     >
       <h2 id="picker-title" className="display-sm">
-        Añadir ejercicio
+        {t('picker.title')}
       </h2>
 
       <div className="picker__filters">
         <div className="field">
-          <label htmlFor="picker-search">Buscar</label>
+          <label htmlFor="picker-search">{t('picker.search')}</label>
           <input
             id="picker-search"
             type="search"
-            placeholder="Buscar ejercicio…"
+            placeholder={t('picker.searchPlaceholder')}
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
         </div>
         <div className="field">
-          <label htmlFor="picker-category">Categoría</label>
+          <label htmlFor="picker-category">{t('picker.category')}</label>
           <select
             id="picker-category"
             value={category}
@@ -93,10 +95,10 @@ export function ExercisePicker({
               setPage(1);
             }}
           >
-            <option value="">Todas</option>
+            <option value="">{t('picker.all')}</option>
             {EXERCISE_CATEGORIES.map((c) => (
               <option key={c} value={c}>
-                {EXERCISE_CATEGORY_LABELS[c]}
+                {t(`category.${c}`)}
               </option>
             ))}
           </select>
@@ -108,9 +110,9 @@ export function ExercisePicker({
           {error}
         </p>
       )}
-      {!error && !exercises && <p className="muted">Cargando…</p>}
+      {!error && !exercises && <p className="muted">{t('common.loading')}</p>}
       {!error && exercises && exercises.length === 0 && (
-        <p className="empty">No hay ejercicios que coincidan.</p>
+        <p className="empty">{t('picker.empty')}</p>
       )}
       {exercises && exercises.length > 0 && (
         <ul className="picker__list">
@@ -127,9 +129,9 @@ export function ExercisePicker({
                   <span>{ex.name}</span>
                   <span className="status">
                     {added
-                      ? 'Añadido'
+                      ? t('picker.added')
                       : ex.category
-                        ? EXERCISE_CATEGORY_LABELS[ex.category]
+                        ? t(`category.${ex.category}`)
                         : null}
                   </span>
                 </button>
@@ -147,10 +149,10 @@ export function ExercisePicker({
             disabled={!pagination.hasPrevPage}
             onClick={() => setPage(page - 1)}
           >
-            Anterior
+            {t('picker.prev')}
           </button>
           <span className="body-sm muted">
-            Página {pagination.page} de {pagination.totalPages}
+            {t('picker.page', { page: pagination.page, total: pagination.totalPages })}
           </span>
           <button
             type="button"
@@ -158,14 +160,14 @@ export function ExercisePicker({
             disabled={!pagination.hasNextPage}
             onClick={() => setPage(page + 1)}
           >
-            Siguiente
+            {t('picker.next')}
           </button>
         </div>
       )}
 
       <div className="dialog__actions">
         <button type="button" className="button button--secondary" onClick={onClose}>
-          Cerrar
+          {t('common.close')}
         </button>
       </div>
     </dialog>
