@@ -214,7 +214,12 @@ export function RoutineEditPage() {
         </form>
       )}
 
-      <ExercisePicker open={picking} onPick={onPickExercise} onClose={() => setPicking(false)} />
+      <ExercisePicker
+        open={picking}
+        excludeIds={rows.map((r) => r.exercise._id)}
+        onPick={onPickExercise}
+        onClose={() => setPicking(false)}
+      />
     </>
   );
 }
