@@ -3,6 +3,7 @@ import { AppLayout } from './components/AppLayout';
 import { ProtectedRoute, PublicOnlyRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { ProgressPage } from './pages/ProgressPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { RoutineEditPage } from './pages/RoutineEditPage';
 import { RoutinesPage } from './pages/RoutinesPage';
@@ -18,6 +19,7 @@ export function App() {
         <Route element={<AppLayout />}>
           <Route path="/rutinas" element={<RoutinesPage />} />
           <Route path="/rutinas/:id" element={<RoutineEditPage />} />
+          <Route path="/progreso" element={<ProgressPage />} />
           <Route path="/perfil" element={<ProfilePage />} />
           <Route path="*" element={<Navigate to="/rutinas" replace />} />
         </Route>

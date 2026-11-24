@@ -1,6 +1,15 @@
 import { API_URL } from '../config';
 import { loadSession, saveSession } from '../auth/session';
-import type { Exercise, ExerciseCategory, LoginResponse, PageInfo, User, Workout } from '../types';
+import type {
+  Exercise,
+  ExerciseCategory,
+  LoginResponse,
+  PageInfo,
+  Progress,
+  TrainingSession,
+  User,
+  Workout,
+} from '../types';
 
 export class ApiError extends Error {
   status: number;
@@ -104,6 +113,10 @@ export const api = {
     publicRequest<LoginResponse>('/auth/login', input),
   me: () => request<{ user: User }>('/users/me'),
   myWorkouts: () => request<{ workouts: Workout[] }>('/users/me/workouts'),
+  myProgress: () => request<{ progress: Progress }>('/users/me/progress'),
+  // 100 es el máximo que da la API en una página
+  mySessions: () =>
+    request<{ sessions: TrainingSession[]; pagination: PageInfo }>('/users/me/sessions?limit=100'),
   createMyWorkout: (name: string) =>
     request<{ workout: Workout }>('/users/me/workouts', {
       method: 'POST',

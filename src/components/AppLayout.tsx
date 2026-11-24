@@ -16,6 +16,9 @@ export function AppLayout() {
             <NavLink to="/rutinas" className="navlink">
               Mis rutinas
             </NavLink>
+            <NavLink to="/progreso" className="navlink">
+              Progreso
+            </NavLink>
             <NavLink to="/perfil" className="navlink">
               Perfil
             </NavLink>
