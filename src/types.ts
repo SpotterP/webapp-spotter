@@ -23,17 +23,17 @@ export type DayOfWeek =
   | 'SATURDAY'
   | 'SUNDAY';
 
-export const EXERCISE_CATEGORY_LABELS = {
-  CHEST: 'Pecho',
-  BACK: 'Espalda',
-  LEGS: 'Piernas',
-  SHOULDERS: 'Hombros',
-  ARMS: 'Brazos',
-  CORE: 'Core',
-  CARDIO: 'Cardio',
-} as const;
-export type ExerciseCategory = keyof typeof EXERCISE_CATEGORY_LABELS;
-export const EXERCISE_CATEGORIES = Object.keys(EXERCISE_CATEGORY_LABELS) as ExerciseCategory[];
+// Los nombres visibles de cada categoría están en src/i18n (claves `category.*`)
+export const EXERCISE_CATEGORIES = [
+  'CHEST',
+  'BACK',
+  'LEGS',
+  'SHOULDERS',
+  'ARMS',
+  'CORE',
+  'CARDIO',
+] as const;
+export type ExerciseCategory = (typeof EXERCISE_CATEGORIES)[number];
 
 export interface Exercise {
   _id: string;

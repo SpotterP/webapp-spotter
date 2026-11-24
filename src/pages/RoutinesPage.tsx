@@ -3,14 +3,12 @@ import type { SyntheticEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, ApiError } from '../api/client';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { useI18n } from '../i18n';
 import type { Workout } from '../types';
-
-function countLabel(n: number): string {
-  return `${n} ${n === 1 ? 'ejercicio' : 'ejercicios'}`;
-}
 
 export function RoutinesPage() {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [workouts, setWorkouts] = useState<Workout[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -31,13 +29,13 @@ export function RoutinesPage() {
       })
       .catch((e) => {
         if (!cancelled) {
-          setLoadError(e instanceof ApiError ? e.message : 'No se han podido cargar las rutinas');
+          setLoadError(e instanceof ApiError ? e.message : t('errors.loadRoutines'));
         }
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   async function onCreate(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -49,7 +47,7 @@ export function RoutinesPage() {
       const { workout } = await api.createMyWorkout(trimmed);
       navigate(`/rutinas/${workout._id}`);
     } catch (e) {
-      setCreateError(e instanceof ApiError ? e.message : 'No se ha podido crear la rutina');
+      setCreateError(e instanceof ApiError ? e.message : t('errors.createRoutine'));
       setCreating(false);
     }
   }
@@ -63,7 +61,7 @@ export function RoutinesPage() {
       setWorkouts((current) => current?.filter((w) => w._id !== toDelete._id) ?? null);
       setToDelete(null);
     } catch (e) {
-      setDeleteError(e instanceof ApiError ? e.message : 'No se ha podido borrar la rutina');
+      setDeleteError(e instanceof ApiError ? e.message : t('errors.deleteRoutine'));
       setToDelete(null);
     } finally {
       setDeleting(false);
@@ -72,15 +70,15 @@ export function RoutinesPage() {
 
   return (
     <>
-      <h1 className="display-lg">Mis rutinas</h1>
+      <h1 className="display-lg">{t('routines.title')}</h1>
 
       <form className="create" onSubmit={onCreate}>
         <div className="field create__field">
-          <label htmlFor="new-routine">Nueva rutina</label>
+          <label htmlFor="new-routine">{t('routines.new')}</label>
           <input
             id="new-routine"
             type="text"
-            placeholder="Por ejemplo, Pierna"
+            placeholder={t('routines.placeholder')}
             required
             maxLength={80}
             value={name}
@@ -88,7 +86,7 @@ export function RoutinesPage() {
           />
         </div>
         <button type="submit" className="button button--primary" disabled={creating || !name.trim()}>
-          {creating ? 'Creando…' : 'Crear rutina'}
+          {creating ? t('routines.creating') : t('routines.create')}
         </button>
       </form>
       {createError && (
@@ -107,10 +105,10 @@ export function RoutinesPage() {
           {loadError}
         </p>
       )}
-      {!loadError && !workouts && <p className="muted">Cargando…</p>}
+      {!loadError && !workouts && <p className="muted">{t('common.loading')}</p>}
 
       {workouts && workouts.length === 0 && (
-        <p className="empty">Todavía no tienes rutinas. Crea una para empezar.</p>
+        <p className="empty">{t('routines.empty')}</p>
       )}
 
       {workouts && workouts.length > 0 && (
@@ -120,15 +118,15 @@ export function RoutinesPage() {
               <Link to={`/rutinas/${w._id}`} className="card__link">
                 <h2 className="display-sm">{w.name}</h2>
                 {w.description && <p className="body-sm muted">{w.description}</p>}
-                <span className="status">{countLabel(w.exercises.length)}</span>
+                <span className="status">{t(w.exercises.length === 1 ? 'routines.exercisesOne' : 'routines.exercisesMany', { n: w.exercises.length })}</span>
               </Link>
               <button
                 type="button"
                 className="button button--secondary button--small"
                 onClick={() => setToDelete(w)}
-                aria-label={`Borrar la rutina ${w.name}`}
+                aria-label={t('routines.deleteAria', { name: w.name })}
               >
-                Borrar
+                {t('common.delete')}
               </button>
             </li>
           ))}
@@ -137,9 +135,9 @@ export function RoutinesPage() {
 
       <ConfirmDialog
         open={toDelete !== null}
-        title="Borrar rutina"
-        message={`¿Seguro que quieres borrar «${toDelete?.name ?? ''}»?`}
-        confirmLabel="Borrar"
+        title={t('routines.deleteTitle')}
+        message={t('routines.deleteConfirm', { name: toDelete?.name ?? '' })}
+        confirmLabel={t('common.delete')}
         busy={deleting}
         onConfirm={onConfirmDelete}
         onCancel={() => setToDelete(null)}
