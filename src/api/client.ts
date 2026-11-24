@@ -100,6 +100,7 @@ export const api = {
       body: JSON.stringify({ name }),
     }),
   myWorkout: (id: string) => request<{ workout: Workout }>(`/users/me/workouts/${id}`),
+  exercise: (id: string) => request<{ exercise: Exercise }>(`/exercises/${id}`),
   updateMyWorkout: (
     id: string,
     input: {
