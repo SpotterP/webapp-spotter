@@ -24,8 +24,10 @@
   --spot: #ffd012;
   --spot-pressed: #e6b800;
   --on-spot: #12110d;
+  --spot-text: #ffd012;
   --success: #3ad6b4;
   --danger: #ff7366;
+  --on-danger: #12110d;
   --focus: #f5f3ea;
 
   --font-display: 'Spotter Display', 'Hanken Grotesk Variable', system-ui, sans-serif;
@@ -45,6 +47,23 @@
   --motion: 160ms ease-out;
   --page-width: 1100px;
   --page-margin: clamp(var(--space-4), 4vw, var(--space-12));
+}
+
+/* Tema claro */
+[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f5f3ea;
+  --surface: #ffffff;
+  --surface-raised: #ece9dc;
+  --border: #dad6c7;
+  --border-strong: #77746a;
+  --ink: #12110d;
+  --ink-muted: #5a584e;
+  --spot-text: #725500;
+  --success: #006b58;
+  --danger: #b92718;
+  --on-danger: #ffffff;
+  --focus: #12110d;
 }
 
 *,
@@ -70,7 +89,7 @@ img {
   max-width: 100%;
 }
 a {
-  color: var(--spot);
+  color: var(--spot-text);
   text-underline-offset: 3px;
 }
 :focus-visible {
@@ -179,6 +198,36 @@ a {
 }
 .logo--on-light {
   display: none;
+}
+[data-theme='light'] .logo--on-dark {
+  display: none;
+}
+[data-theme='light'] .logo--on-light {
+  display: block;
+}
+
+/* Botón de tema */
+.theme-toggle {
+  width: 40px;
+  min-height: 40px;
+  padding: 0;
+}
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+.theme-toggle .icon--moon,
+[data-theme='light'] .theme-toggle .icon--sun {
+  display: none;
+}
+[data-theme='light'] .theme-toggle .icon--moon {
+  display: block;
+}
+.theme-toggle--floating {
+  position: fixed;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 10;
 }
 
 /* Formularios */
@@ -386,7 +435,7 @@ a {
 /* Mis rutinas */
 .button--danger {
   background: var(--danger);
-  color: var(--on-spot);
+  color: var(--on-danger);
 }
 .button--danger:hover:not(:disabled) {
   filter: brightness(0.9);
@@ -419,7 +468,7 @@ a {
   text-decoration: none;
 }
 .card__link:hover h2 {
-  color: var(--spot);
+  color: var(--spot-text);
 }
 .dialog {
   width: min(420px, calc(100vw - 2 * var(--space-4)));
@@ -562,7 +611,7 @@ a {
   font-family: var(--font-display);
   font-size: 2.25rem;
   line-height: 1;
-  color: var(--spot);
+  color: var(--spot-text);
 }
 
 .stat__label {

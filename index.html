@@ -6,6 +6,13 @@
     <meta name="theme-color" content="#0e0e0c" />
     <link rel="icon" type="image/svg+xml" href="/logos/spotter-simbolo.svg" />
     <title>Spotter</title>
+    <script>
+      try {
+        if (localStorage.getItem('theme') === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

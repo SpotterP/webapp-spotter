@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Logo } from './Logo';
+import { ThemeToggle } from './ThemeToggle';
 
 export function AuthShell({
   title,
@@ -12,6 +13,7 @@ export function AuthShell({
 }) {
   return (
     <main className="auth">
+      <ThemeToggle floating />
       <div className="auth__card">
         <div className="auth__logo">
           <Logo height={30} />
