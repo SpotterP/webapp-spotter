@@ -1,31 +1,17 @@
-import { useState } from 'react';
+import { useSyncExternalStore } from 'react';
+import { useI18n } from '../i18n';
+import { getTheme, setTheme, subscribeTheme } from '../theme';
 
-const STORAGE_KEY = 'theme';
-
-function isLight(): boolean {
-  return document.documentElement.getAttribute('data-theme') === 'light';
-}
-
-export function ThemeToggle({ floating = false }: { floating?: boolean }) {
-  const [light, setLight] = useState(isLight);
-
-  function toggle() {
-    const next = !light;
-    if (next) document.documentElement.setAttribute('data-theme', 'light');
-    else document.documentElement.removeAttribute('data-theme');
-    try {
-      localStorage.setItem(STORAGE_KEY, next ? 'light' : 'dark');
-    } catch {}
-    setLight(next);
-  }
-
-  const label = light ? 'Cambiar a tema oscuro' : 'Cambiar a tema claro';
+export function ThemeToggle() {
+  const { t } = useI18n();
+  const theme = useSyncExternalStore(subscribeTheme, getTheme);
+  const label = theme === 'light' ? t('theme.toDark') : t('theme.toLight');
 
   return (
     <button
       type="button"
-      className={`button button--secondary theme-toggle${floating ? ' theme-toggle--floating' : ''}`}
-      onClick={toggle}
+      className="button button--secondary theme-toggle"
+      onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
       aria-label={label}
       title={label}
     >

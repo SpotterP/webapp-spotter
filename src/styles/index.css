@@ -25,6 +25,7 @@
   --spot-pressed: #e6b800;
   --on-spot: #12110d;
   --spot-text: #ffd012;
+  --spot-tint: #2b2607;
   --success: #3ad6b4;
   --danger: #ff7366;
   --on-danger: #12110d;
@@ -60,6 +61,7 @@
   --ink: #12110d;
   --ink-muted: #5a584e;
   --spot-text: #725500;
+  --spot-tint: #fff3b5;
   --success: #006b58;
   --danger: #b92718;
   --on-danger: #ffffff;
@@ -223,11 +225,56 @@ a {
 [data-theme='light'] .theme-toggle .icon--moon {
   display: block;
 }
-.theme-toggle--floating {
+.auth__tools {
   position: fixed;
   top: var(--space-4);
   right: var(--space-4);
   z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.lang-select {
+  min-height: 40px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+}
+.lang-select:hover {
+  border-color: var(--ink);
+}
+
+/* Ajustes */
+.settings {
+  display: grid;
+  gap: var(--space-6);
+  max-width: 520px;
+  margin-top: var(--space-6);
+}
+.settings__theme {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.settings__theme legend {
+  padding: 0;
+  margin-bottom: var(--space-2);
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.segmented {
+  display: flex;
+  gap: var(--space-2);
+}
+.segmented .button.is-active {
+  border-color: var(--spot);
+  background: var(--spot-tint);
 }
 
 /* Formularios */
