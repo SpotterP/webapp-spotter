@@ -1,6 +1,6 @@
 import { API_URL } from '../config';
 import { loadSession, saveSession } from '../auth/session';
-import type { Exercise, LoginResponse, User, Workout } from '../types';
+import type { Exercise, ExerciseCategory, LoginResponse, PageInfo, User, Workout } from '../types';
 
 export class ApiError extends Error {
   status: number;
@@ -98,19 +98,33 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ name }),
     }),
-  // Una rutina del usuario, con sus ejercicios completos
   myWorkout: (id: string) => request<{ workout: Workout }>(`/users/me/workouts/${id}`),
-  // Guarda el nombre y los ejercicios (con series y repeticiones) de una rutina del usuario
   updateMyWorkout: (
     id: string,
-    input: { name: string; exercises: Array<{ exercise: string; sets: number; reps: number }> },
+    input: {
+      name: string;
+      description?: string;
+      days?: string[];
+      exercises: Array<{ exercise: string; sets: number; reps: number }>;
+    },
   ) =>
     request<{ workout: Workout }>(`/users/me/workouts/${id}`, {
       method: 'PUT',
       body: JSON.stringify(input),
     }),
-  // Catálogo de ejercicios (hasta 100, ordenados por nombre) para el selector de la rutina
-  exercises: () =>
-    request<{ exercises: Exercise[] }>('/exercises?limit=100&sort=name&order=asc'),
+  exercises: (params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    category?: ExerciseCategory | '';
+  } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.search) query.set('search', params.search);
+    if (params.category) query.set('category', params.category);
+    const qs = query.toString();
+    return request<{ exercises: Exercise[]; pagination: PageInfo }>(`/exercises${qs ? `?${qs}` : ''}`);
+  },
   deleteMyWorkout: (id: string) => request<null>(`/users/me/workouts/${id}`, { method: 'DELETE' }),
 };

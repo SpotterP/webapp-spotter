@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import type { SyntheticEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, ApiError } from '../api/client';
+import { ExercisePicker } from '../components/ExercisePicker';
 import type { Exercise } from '../types';
 
-// Un ejercicio de la rutina que se está editando: el ejercicio del catálogo y sus series y repeticiones
 interface Row {
   exercise: Exercise;
   sets: number;
@@ -15,28 +15,22 @@ export function RoutineEditPage() {
   const { id } = useParams();
 
   const [name, setName] = useState('');
-  // El orden de este array es el orden de los ejercicios de la rutina
   const [rows, setRows] = useState<Row[]>([]);
-  // Todos los ejercicios del catálogo, para el selector
-  const [catalog, setCatalog] = useState<Exercise[]>([]);
-  // Id del ejercicio elegido en el selector
-  const [selected, setSelected] = useState('');
+  const [picking, setPicking] = useState(false);
 
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // Al abrir la pantalla cargamos la rutina y el catálogo a la vez
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    Promise.all([api.myWorkout(id), api.exercises()])
-      .then(([{ workout }, { exercises }]) => {
+    api
+      .myWorkout(id)
+      .then(({ workout }) => {
         if (cancelled) return;
         setName(workout.name);
-        setCatalog(exercises);
-        // La rutina trae el ejercicio completo (populate). Si ya no existe en el catálogo, se salta.
         setRows(
           workout.exercises.flatMap((item) =>
             typeof item.exercise === 'object' && item.exercise
@@ -56,42 +50,31 @@ export function RoutineEditPage() {
     };
   }, [id]);
 
-  // En el selector solo se ofrecen los ejercicios que todavía no están en la rutina
-  const available = catalog.filter((e) => !rows.some((r) => r.exercise._id === e._id));
-
-  // Cualquier cambio en la rutina oculta el aviso de "guardado"
   function changeRows(next: Row[]) {
     setRows(next);
     setSaved(false);
   }
 
-  // Añade el ejercicio elegido al final, con 3 series de 10 por defecto
-  function addExercise() {
-    const exercise = catalog.find((e) => e._id === selected);
-    if (!exercise) return;
+  function onPickExercise(exercise: Exercise) {
+    setPicking(false);
+    if (rows.some((r) => r.exercise._id === exercise._id)) return;
     changeRows([...rows, { exercise, sets: 3, reps: 10 }]);
-    setSelected('');
   }
 
-  // Cambia las series o las repeticiones de un ejercicio
   function updateRow(index: number, field: 'sets' | 'reps', value: number) {
     changeRows(rows.map((r, i) => (i === index ? { ...r, [field]: value } : r)));
   }
 
-  // Cambia el orden: intercambia el ejercicio con el de arriba (-1) o el de abajo (1)
   function move(index: number, direction: -1 | 1) {
     const next = [...rows];
     [next[index], next[index + direction]] = [next[index + direction], next[index]];
     changeRows(next);
   }
 
-  // Quita un ejercicio de la rutina
   function remove(index: number) {
     changeRows(rows.filter((_, i) => i !== index));
   }
 
-  // Guarda el nombre y los ejercicios con PUT /users/me/workouts/:id.
-  // El navegador ya comprueba que el nombre no está vacío y que series y repeticiones son 1 o más.
   async function onSave(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!id) return;
@@ -207,30 +190,13 @@ export function RoutineEditPage() {
             ))}
           </ol>
 
-          {/* Selector de ejercicios del catálogo */}
-          <div className="picker">
-            <div className="field picker__field">
-              <label htmlFor="exercise-picker">Añadir ejercicio</label>
-              <select
-                id="exercise-picker"
-                value={selected}
-                onChange={(e) => setSelected(e.target.value)}
-              >
-                <option value="">Elige un ejercicio</option>
-                {available.map((e) => (
-                  <option key={e._id} value={e._id}>
-                    {e.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div>
             <button
               type="button"
               className="button button--secondary"
-              onClick={addExercise}
-              disabled={!selected}
+              onClick={() => setPicking(true)}
             >
-              Añadir
+              Añadir ejercicio
             </button>
           </div>
 
@@ -247,6 +213,8 @@ export function RoutineEditPage() {
           </div>
         </form>
       )}
+
+      <ExercisePicker open={picking} onPick={onPickExercise} onClose={() => setPicking(false)} />
     </>
   );
 }
