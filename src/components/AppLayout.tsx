@@ -32,8 +32,8 @@ export function AppLayout() {
           <div className="topbar__session">
             <ThemeToggle />
             <span className="topbar__user body-sm muted">{user?.name}</span>
-            <button type="button" className="button button--secondary button--small" onClick={logout}>
-              {t('common.logout')}
+            <button type="button" className="button button--secondary button--small" onClick={() => void logout()}>
+              Cerrar sesión
             </button>
           </div>
         </div>
