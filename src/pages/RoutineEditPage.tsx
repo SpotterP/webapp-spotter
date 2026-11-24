@@ -3,9 +3,9 @@ import type { SyntheticEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, ApiError } from '../api/client';
 import { ExercisePicker } from '../components/ExercisePicker';
+import { useI18n } from '../i18n';
 import type { Exercise } from '../types';
 import {
-  MISSING_EXERCISE_NAME,
   resolveRow,
   toPayload,
   toRows,
@@ -16,6 +16,7 @@ import type { RoutineRow } from './routineRows';
 
 export function RoutineEditPage() {
   const { id } = useParams();
+  const { t } = useI18n();
 
   const [name, setName] = useState('');
   const [rows, setRows] = useState<RoutineRow[]>([]);
@@ -54,13 +55,13 @@ export function RoutineEditPage() {
       })
       .catch((e) => {
         if (!cancelled) {
-          setError(e instanceof ApiError ? e.message : 'No se ha podido cargar la rutina');
+          setError(e instanceof ApiError ? e.message : t('errors.loadRoutine'));
         }
       });
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, t]);
 
   function changeRows(next: RoutineRow[]) {
     setRows(next);
@@ -95,9 +96,7 @@ export function RoutineEditPage() {
     // Un ejercicio que ya no está en el catálogo no se puede conservar si perdimos
     // su id; guardar en ese estado lo borraría de la rutina sin decirlo.
     if (unrepresentableRows(rows) > 0) {
-      setError(
-        'Hay un ejercicio que ya no existe en el catálogo. Quítalo de la rutina para poder guardar.',
-      );
+      setError(t('edit.cannotSave'));
       return;
     }
 
@@ -107,7 +106,7 @@ export function RoutineEditPage() {
       await api.updateMyWorkout(id, { name: name.trim(), exercises: toPayload(rows) });
       setSaved(true);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'No se han podido guardar los cambios');
+      setError(e instanceof ApiError ? e.message : t('errors.saveRoutine'));
     } finally {
       setSaving(false);
     }
@@ -116,21 +115,21 @@ export function RoutineEditPage() {
   return (
     <>
       <Link to="/rutinas" className="body-sm">
-        ← Mis rutinas
+        {t('edit.back')}
       </Link>
-      <h1 className="display-lg">Editar rutina</h1>
+      <h1 className="display-lg">{t('edit.title')}</h1>
 
       {error && (
         <p className="notice notice--error" role="alert">
           {error}
         </p>
       )}
-      {!loaded && !error && <p className="muted">Cargando…</p>}
+      {!loaded && !error && <p className="muted">{t('common.loading')}</p>}
 
       {loaded && (
         <form className="editor" onSubmit={onSave}>
           <div className="field">
-            <label htmlFor="routine-name">Nombre</label>
+            <label htmlFor="routine-name">{t('common.name')}</label>
             <input
               id="routine-name"
               type="text"
@@ -144,10 +143,10 @@ export function RoutineEditPage() {
             />
           </div>
 
-          <h2 className="display-sm">Ejercicios</h2>
+          <h2 className="display-sm">{t('edit.exercises')}</h2>
 
           {rows.length === 0 && (
-            <p className="empty">Esta rutina no tiene ejercicios. Añade el primero.</p>
+            <p className="empty">{t('edit.noExercises')}</p>
           )}
 
           <ol className="exercise-list">
@@ -157,10 +156,10 @@ export function RoutineEditPage() {
                 className={`exercise-row${row.missing ? ' exercise-row--missing' : ''}`}
               >
                 <span className="exercise-row__name">
-                  {row.missing ? MISSING_EXERCISE_NAME : row.exercise.name}
+                  {row.missing ? t('edit.missingName') : row.exercise.name}
                 </span>
                 <div className="field exercise-row__num">
-                  <label htmlFor={`sets-${index}`}>Series</label>
+                  <label htmlFor={`sets-${index}`}>{t('edit.sets')}</label>
                   <input
                     id={`sets-${index}`}
                     type="number"
@@ -172,7 +171,7 @@ export function RoutineEditPage() {
                   />
                 </div>
                 <div className="field exercise-row__num">
-                  <label htmlFor={`reps-${index}`}>Reps</label>
+                  <label htmlFor={`reps-${index}`}>{t('edit.reps')}</label>
                   <input
                     id={`reps-${index}`}
                     type="number"
@@ -189,7 +188,7 @@ export function RoutineEditPage() {
                     className="button button--secondary button--small"
                     onClick={() => move(index, -1)}
                     disabled={index === 0}
-                    aria-label={`Subir ${row.exercise.name}`}
+                    aria-label={t('edit.moveUp', { name: row.exercise.name })}
                   >
                     ↑
                   </button>
@@ -198,7 +197,7 @@ export function RoutineEditPage() {
                     className="button button--secondary button--small"
                     onClick={() => move(index, 1)}
                     disabled={index === rows.length - 1}
-                    aria-label={`Bajar ${row.exercise.name}`}
+                    aria-label={t('edit.moveDown', { name: row.exercise.name })}
                   >
                     ↓
                   </button>
@@ -206,9 +205,9 @@ export function RoutineEditPage() {
                     type="button"
                     className="button button--secondary button--small"
                     onClick={() => remove(index)}
-                    aria-label={`Quitar ${row.exercise.name}`}
+                    aria-label={t('edit.removeAria', { name: row.exercise.name })}
                   >
-                    Quitar
+                    {t('common.remove')}
                   </button>
                 </div>
               </li>
@@ -217,8 +216,7 @@ export function RoutineEditPage() {
 
           {rows.some((row) => row.missing) && (
             <p className="notice notice--error" role="alert">
-              Algún ejercicio de esta rutina ya no está en el catálogo. Se muestra para que no se
-              pierda sin que lo veas: quítalo si ya no lo quieres.
+              {t('edit.missingNotice')}
             </p>
           )}
 
@@ -228,19 +226,19 @@ export function RoutineEditPage() {
               className="button button--secondary"
               onClick={() => setPicking(true)}
             >
-              Añadir ejercicio
+              {t('edit.add')}
             </button>
           </div>
 
           {saved && (
             <p className="notice notice--ok" role="status">
-              Cambios guardados.
+              {t('edit.saved')}
             </p>
           )}
 
           <div>
             <button type="submit" className="button button--primary" disabled={saving}>
-              {saving ? 'Guardando…' : 'Guardar cambios'}
+              {saving ? t('edit.saving') : t('edit.save')}
             </button>
           </div>
         </form>

@@ -1,6 +1,16 @@
 import { API_URL } from '../config';
 import { loadSession, saveSession } from '../auth/session';
-import type { Exercise, ExerciseCategory, LoginResponse, PageInfo, User, Workout } from '../types';
+import { translate } from '../i18n';
+import type {
+  Exercise,
+  ExerciseCategory,
+  LoginResponse,
+  PageInfo,
+  Progress,
+  TrainingSession,
+  User,
+  Workout,
+} from '../types';
 
 export class ApiError extends Error {
   status: number;
@@ -24,7 +34,7 @@ async function parse(response: Response): Promise<unknown> {
 function toError(status: number, body: unknown): ApiError {
   const message =
     body && typeof body === 'object' && 'message' in body ? String(body.message) : null;
-  return new ApiError(status, message ?? 'No se ha podido completar la operación');
+  return new ApiError(status, message ?? translate('errors.generic'));
 }
 
 async function send(path: string, init: RequestInit, token?: string): Promise<Response> {
@@ -34,7 +44,7 @@ async function send(path: string, init: RequestInit, token?: string): Promise<Re
   try {
     return await fetch(`${API_URL}${path}`, { ...init, headers });
   } catch {
-    throw new ApiError(0, 'No se puede conectar con el servidor');
+    throw new ApiError(0, translate('errors.network'));
   }
 }
 
@@ -50,7 +60,7 @@ let refreshing: Promise<string> | null = null;
 function refreshToken(): Promise<string> {
   refreshing ??= (async () => {
     const session = loadSession();
-    if (!session) throw new ApiError(401, 'Sesión no iniciada');
+    if (!session) throw new ApiError(401, translate('errors.noSession'));
     try {
       const { token } = await publicRequest<{ token: string }>('/auth/refresh', {
         refreshToken: session.refreshToken,
@@ -78,7 +88,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     // Sin sesión guardada (otra pestaña la borró, o quedó inválida) hay que avisar a la
     // UI: si no, queda logueada para siempre mientras todas las peticiones dan 401.
     saveSession(null);
-    throw new ApiError(401, 'Sesión no iniciada');
+    throw new ApiError(401, translate('errors.noSession'));
   }
 
   let response = await send(path, init, session.token);
@@ -108,6 +118,10 @@ export const api = {
   logout: () => request<void>('/auth/logout', { method: 'POST' }),
   me: () => request<{ user: User }>('/users/me'),
   myWorkouts: () => request<{ workouts: Workout[] }>('/users/me/workouts'),
+  myProgress: () => request<{ progress: Progress }>('/users/me/progress'),
+  // 100 es el máximo que da la API en una página
+  mySessions: () =>
+    request<{ sessions: TrainingSession[]; pagination: PageInfo }>('/users/me/sessions?limit=100'),
   createMyWorkout: (name: string) =>
     request<{ workout: Workout }>('/users/me/workouts', {
       method: 'POST',

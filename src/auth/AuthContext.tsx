@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { api, ApiError } from '../api/client';
+import { translate } from '../i18n';
 import type { User } from '../types';
 import { loadSession, saveSession, subscribeSession } from './session';
 import type { Session } from './session';
@@ -24,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Si el navegador no deja guardar la sesión (modo privado, cuota llena), el login
     // no puede dar por hecho que hay sesión: hay que decírselo al usuario.
     if (!saveSession({ token, refreshToken, user })) {
-      throw new ApiError(500, 'El navegador no ha dejado guardar la sesión. Revisa el almacenamiento del sitio.');
+      throw new ApiError(500, translate('errors.storage'));
     }
   }, []);
 

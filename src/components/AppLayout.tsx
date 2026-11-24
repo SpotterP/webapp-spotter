@@ -1,9 +1,12 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { useI18n } from '../i18n';
 import { Logo } from './Logo';
+import { ThemeToggle } from './ThemeToggle';
 
 export function AppLayout() {
   const { user, logout } = useAuth();
+  const { t } = useI18n();
 
   return (
     <>
@@ -12,15 +15,22 @@ export function AppLayout() {
           <NavLink to="/rutinas" className="topbar__logo" aria-label="Spotter">
             <Logo />
           </NavLink>
-          <nav className="topbar__nav" aria-label="Principal">
+          <nav className="topbar__nav" aria-label={t('nav.main')}>
             <NavLink to="/rutinas" className="navlink">
-              Mis rutinas
+              {t('nav.routines')}
+            </NavLink>
+            <NavLink to="/progreso" className="navlink">
+              {t('nav.progress')}
             </NavLink>
             <NavLink to="/perfil" className="navlink">
-              Perfil
+              {t('nav.profile')}
+            </NavLink>
+            <NavLink to="/ajustes" className="navlink">
+              {t('nav.settings')}
             </NavLink>
           </nav>
           <div className="topbar__session">
+            <ThemeToggle />
             <span className="topbar__user body-sm muted">{user?.name}</span>
             <button type="button" className="button button--secondary button--small" onClick={() => void logout()}>
               Cerrar sesión
