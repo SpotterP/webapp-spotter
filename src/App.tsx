@@ -7,6 +7,7 @@ import { ProgressPage } from './pages/ProgressPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { RoutineEditPage } from './pages/RoutineEditPage';
 import { RoutinesPage } from './pages/RoutinesPage';
+import { SettingsPage } from './pages/SettingsPage';
 
 export function App() {
   return (
@@ -21,6 +22,7 @@ export function App() {
           <Route path="/rutinas/:id" element={<RoutineEditPage />} />
           <Route path="/progreso" element={<ProgressPage />} />
           <Route path="/perfil" element={<ProfilePage />} />
+          <Route path="/ajustes" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/rutinas" replace />} />
         </Route>
       </Route>
