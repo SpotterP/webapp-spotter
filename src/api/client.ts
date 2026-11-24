@@ -1,6 +1,6 @@
 import { API_URL } from '../config';
 import { loadSession, saveSession } from '../auth/session';
-import type { LoginResponse, User, Workout } from '../types';
+import type { Exercise, LoginResponse, User, Workout } from '../types';
 
 export class ApiError extends Error {
   status: number;
@@ -98,5 +98,19 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ name }),
     }),
+  // Una rutina del usuario, con sus ejercicios completos
+  myWorkout: (id: string) => request<{ workout: Workout }>(`/users/me/workouts/${id}`),
+  // Guarda el nombre y los ejercicios (con series y repeticiones) de una rutina del usuario
+  updateMyWorkout: (
+    id: string,
+    input: { name: string; exercises: Array<{ exercise: string; sets: number; reps: number }> },
+  ) =>
+    request<{ workout: Workout }>(`/users/me/workouts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    }),
+  // Catálogo de ejercicios (hasta 100, ordenados por nombre) para el selector de la rutina
+  exercises: () =>
+    request<{ exercises: Exercise[] }>('/exercises?limit=100&sort=name&order=asc'),
   deleteMyWorkout: (id: string) => request<null>(`/users/me/workouts/${id}`, { method: 'DELETE' }),
 };
