@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { api } from '../api/client';
+import { api, ApiError } from '../api/client';
 import type { User } from '../types';
 import { loadSession, saveSession, subscribeSession } from './session';
 import type { Session } from './session';
@@ -20,7 +20,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const { token, refreshToken, user } = await api.login({ email, password });
-    saveSession({ token, refreshToken, user });
+
+    // Si el navegador no deja guardar la sesión (modo privado, cuota llena), el login
+    // no puede dar por hecho que hay sesión: hay que decírselo al usuario.
+    if (!saveSession({ token, refreshToken, user })) {
+      throw new ApiError(500, 'El navegador no ha dejado guardar la sesión. Revisa el almacenamiento del sitio.');
+    }
   }, []);
 
   const logout = useCallback(() => saveSession(null), []);
