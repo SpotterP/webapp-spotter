@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { Logo } from './Logo';
+import { ThemeToggle } from './ThemeToggle';
 
 export function AppLayout() {
   const { user, logout } = useAuth();
@@ -24,6 +25,7 @@ export function AppLayout() {
             </NavLink>
           </nav>
           <div className="topbar__session">
+            <ThemeToggle />
             <span className="topbar__user body-sm muted">{user?.name}</span>
             <button type="button" className="button button--secondary button--small" onClick={logout}>
               Cerrar sesión
