@@ -32,6 +32,19 @@ Para compilar la versión de producción:
 npm run build
 ```
 
+## Linter y hook de Git
+
+El linter es [Oxlint](https://oxc.rs/docs/guide/usage/linter) (el mismo que el backend), con sus reglas en `.oxlintrc.json`:
+
+```bash
+npm run lint        # analiza src/
+npm run lint:fix    # aplica las correcciones automáticas
+```
+
+Al hacer `npm install` se activa solo un hook de Git (`.githooks/pre-commit`, lo configura el script `prepare`).
+Antes de cada `git commit` pasa `npm run lint`: si el linter encuentra un error, el commit se cancela y dice qué arreglar.
+Se puede saltar una vez con `git commit --no-verify`, pero lo normal es arreglar el aviso.
+
 ## Pantallas
 
 Sin sesión, cualquier página protegida redirige a `/login`.
