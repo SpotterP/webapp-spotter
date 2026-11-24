@@ -58,7 +58,12 @@ function refreshToken(): Promise<string> {
       saveSession({ ...session, token });
       return token;
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) saveSession(null);
+      // Un 401/403 significa que la sesión ya no sirve: se borra para que la UI no siga
+      // creyendo que hay sesión. Un fallo de red, un 5xx o un 429 (demasiados intentos)
+      // son pasajeros y la sesión se conserva.
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+        saveSession(null);
+      }
       throw error;
     } finally {
       refreshing = null;
@@ -69,7 +74,12 @@ function refreshToken(): Promise<string> {
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const session = loadSession();
-  if (!session) throw new ApiError(401, 'Sesión no iniciada');
+  if (!session) {
+    // Sin sesión guardada (otra pestaña la borró, o quedó inválida) hay que avisar a la
+    // UI: si no, queda logueada para siempre mientras todas las peticiones dan 401.
+    saveSession(null);
+    throw new ApiError(401, 'Sesión no iniciada');
+  }
 
   let response = await send(path, init, session.token);
   let data = await parse(response);
@@ -100,6 +110,7 @@ export const api = {
       body: JSON.stringify({ name }),
     }),
   myWorkout: (id: string) => request<{ workout: Workout }>(`/users/me/workouts/${id}`),
+  exercise: (id: string) => request<{ exercise: Exercise }>(`/exercises/${id}`),
   updateMyWorkout: (
     id: string,
     input: {

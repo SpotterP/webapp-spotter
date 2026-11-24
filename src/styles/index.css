@@ -472,6 +472,15 @@ a {
   font-family: var(--font-display);
   font-weight: 700;
 }
+/* Una referencia que ya no está en el catálogo: se ve distinta para no confundirla con un ejercicio real. */
+.exercise-row--missing {
+  border-style: dashed;
+  border-color: var(--danger);
+}
+.exercise-row--missing .exercise-row__name {
+  color: var(--danger);
+  font-style: italic;
+}
 .exercise-row__num {
   width: 88px;
 }

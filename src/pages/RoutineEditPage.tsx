@@ -4,18 +4,21 @@ import { Link, useParams } from 'react-router-dom';
 import { api, ApiError } from '../api/client';
 import { ExercisePicker } from '../components/ExercisePicker';
 import type { Exercise } from '../types';
-
-interface Row {
-  exercise: Exercise;
-  sets: number;
-  reps: number;
-}
+import {
+  MISSING_EXERCISE_NAME,
+  resolveRow,
+  toPayload,
+  toRows,
+  unrepresentableRows,
+  unresolvedIds,
+} from './routineRows';
+import type { RoutineRow } from './routineRows';
 
 export function RoutineEditPage() {
   const { id } = useParams();
 
   const [name, setName] = useState('');
-  const [rows, setRows] = useState<Row[]>([]);
+  const [rows, setRows] = useState<RoutineRow[]>([]);
   const [picking, setPicking] = useState(false);
 
   const [loaded, setLoaded] = useState(false);
@@ -31,14 +34,23 @@ export function RoutineEditPage() {
       .then(({ workout }) => {
         if (cancelled) return;
         setName(workout.name);
-        setRows(
-          workout.exercises.flatMap((item) =>
-            typeof item.exercise === 'object' && item.exercise
-              ? [{ exercise: item.exercise, sets: item.sets, reps: item.reps }]
-              : [],
-          ),
-        );
+        // Ninguna referencia se descarta: las que la API no populó quedan marcadas
+        // como `missing` para que el guardado no las borre sin avisar.
+        const nextRows = toRows(workout.exercises);
+        setRows(nextRows);
         setLoaded(true);
+
+        // Las que llegaron como id suelto todavía se pueden recuperar del catálogo.
+        for (const exerciseId of unresolvedIds(nextRows)) {
+          api
+            .exercise(exerciseId)
+            .then(({ exercise }) => {
+              if (!cancelled) setRows((current) => resolveRow(current, exercise));
+            })
+            .catch(() => {
+              /* sigue marcada como `missing`: se muestra y se avisa al guardar */
+            });
+        }
       })
       .catch((e) => {
         if (!cancelled) {
@@ -50,9 +62,10 @@ export function RoutineEditPage() {
     };
   }, [id]);
 
-  function changeRows(next: Row[]) {
+  function changeRows(next: RoutineRow[]) {
     setRows(next);
     setSaved(false);
+    setError(null);
   }
 
   function onPickExercise(exercise: Exercise) {
@@ -78,13 +91,20 @@ export function RoutineEditPage() {
   async function onSave(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!id) return;
+
+    // Un ejercicio que ya no está en el catálogo no se puede conservar si perdimos
+    // su id; guardar en ese estado lo borraría de la rutina sin decirlo.
+    if (unrepresentableRows(rows) > 0) {
+      setError(
+        'Hay un ejercicio que ya no existe en el catálogo. Quítalo de la rutina para poder guardar.',
+      );
+      return;
+    }
+
     setError(null);
     setSaving(true);
     try {
-      await api.updateMyWorkout(id, {
-        name: name.trim(),
-        exercises: rows.map((r) => ({ exercise: r.exercise._id, sets: r.sets, reps: r.reps })),
-      });
+      await api.updateMyWorkout(id, { name: name.trim(), exercises: toPayload(rows) });
       setSaved(true);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se han podido guardar los cambios');
@@ -132,8 +152,13 @@ export function RoutineEditPage() {
 
           <ol className="exercise-list">
             {rows.map((row, index) => (
-              <li key={row.exercise._id} className="exercise-row">
-                <span className="exercise-row__name">{row.exercise.name}</span>
+              <li
+                key={row.exercise._id || `missing-${index}`}
+                className={`exercise-row${row.missing ? ' exercise-row--missing' : ''}`}
+              >
+                <span className="exercise-row__name">
+                  {row.missing ? MISSING_EXERCISE_NAME : row.exercise.name}
+                </span>
                 <div className="field exercise-row__num">
                   <label htmlFor={`sets-${index}`}>Series</label>
                   <input
@@ -189,6 +214,13 @@ export function RoutineEditPage() {
               </li>
             ))}
           </ol>
+
+          {rows.some((row) => row.missing) && (
+            <p className="notice notice--error" role="alert">
+              Algún ejercicio de esta rutina ya no está en el catálogo. Se muestra para que no se
+              pierda sin que lo veas: quítalo si ya no lo quieres.
+            </p>
+          )}
 
           <div>
             <button
