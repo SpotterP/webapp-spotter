@@ -92,6 +92,7 @@ export const api = {
     publicRequest<{ user: User }>('/auth/register', input),
   login: (input: { email: string; password: string }) =>
     publicRequest<LoginResponse>('/auth/login', input),
+  me: () => request<{ user: User }>('/users/me'),
   myWorkouts: () => request<{ workouts: Workout[] }>('/users/me/workouts'),
   createMyWorkout: (name: string) =>
     request<{ workout: Workout }>('/users/me/workouts', {
