@@ -1,5 +1,6 @@
 import { API_URL } from '../config';
 import { loadSession, saveSession } from '../auth/session';
+import { translate } from '../i18n';
 import type {
   Exercise,
   ExerciseCategory,
@@ -33,7 +34,7 @@ async function parse(response: Response): Promise<unknown> {
 function toError(status: number, body: unknown): ApiError {
   const message =
     body && typeof body === 'object' && 'message' in body ? String(body.message) : null;
-  return new ApiError(status, message ?? 'No se ha podido completar la operación');
+  return new ApiError(status, message ?? translate('errors.generic'));
 }
 
 async function send(path: string, init: RequestInit, token?: string): Promise<Response> {
@@ -43,7 +44,7 @@ async function send(path: string, init: RequestInit, token?: string): Promise<Re
   try {
     return await fetch(`${API_URL}${path}`, { ...init, headers });
   } catch {
-    throw new ApiError(0, 'No se puede conectar con el servidor');
+    throw new ApiError(0, translate('errors.network'));
   }
 }
 
@@ -59,7 +60,7 @@ let refreshing: Promise<string> | null = null;
 function refreshToken(): Promise<string> {
   refreshing ??= (async () => {
     const session = loadSession();
-    if (!session) throw new ApiError(401, 'Sesión no iniciada');
+    if (!session) throw new ApiError(401, translate('errors.noSession'));
     try {
       const { token } = await publicRequest<{ token: string }>('/auth/refresh', {
         refreshToken: session.refreshToken,
@@ -87,7 +88,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     // Sin sesión guardada (otra pestaña la borró, o quedó inválida) hay que avisar a la
     // UI: si no, queda logueada para siempre mientras todas las peticiones dan 401.
     saveSession(null);
-    throw new ApiError(401, 'Sesión no iniciada');
+    throw new ApiError(401, translate('errors.noSession'));
   }
 
   let response = await send(path, init, session.token);
