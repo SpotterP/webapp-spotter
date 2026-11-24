@@ -7,10 +7,12 @@ const PAGE_SIZE = 8;
 
 export function ExercisePicker({
   open,
+  excludeIds = [],
   onPick,
   onClose,
 }: {
   open: boolean;
+  excludeIds?: string[];
   onPick: (exercise: Exercise) => void;
   onClose: () => void;
 }) {
@@ -112,16 +114,28 @@ export function ExercisePicker({
       )}
       {exercises && exercises.length > 0 && (
         <ul className="picker__list">
-          {exercises.map((ex) => (
-            <li key={ex._id}>
-              <button type="button" className="picker__item" onClick={() => onPick(ex)}>
-                <span>{ex.name}</span>
-                {ex.category && (
-                  <span className="status">{EXERCISE_CATEGORY_LABELS[ex.category]}</span>
-                )}
-              </button>
-            </li>
-          ))}
+          {exercises.map((ex) => {
+            const added = excludeIds.includes(ex._id);
+            return (
+              <li key={ex._id}>
+                <button
+                  type="button"
+                  className="picker__item"
+                  disabled={added}
+                  onClick={() => onPick(ex)}
+                >
+                  <span>{ex.name}</span>
+                  <span className="status">
+                    {added
+                      ? 'Añadido'
+                      : ex.category
+                        ? EXERCISE_CATEGORY_LABELS[ex.category]
+                        : null}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
 

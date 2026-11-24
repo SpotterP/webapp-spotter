@@ -512,8 +512,12 @@ a {
   text-align: left;
   cursor: pointer;
 }
-.picker__item:hover {
+.picker__item:hover:not(:disabled) {
   border-color: var(--spot);
+}
+.picker__item:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 .picker__pager {
   display: flex;
