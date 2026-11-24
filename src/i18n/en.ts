@@ -48,6 +48,8 @@ export const en: Record<MessageKey, string> = {
   'register.title': 'Create your account',
   'register.intro': 'Sign up to get started with your routines.',
   'register.passwordHelp': 'At least 8 characters.',
+  'register.confirm': 'Repeat the password',
+  'register.mismatch': 'The passwords do not match.',
   'register.submit': 'Create account',
   'register.busy': 'Creating…',
   'register.haveAccount': 'Already have an account?',
