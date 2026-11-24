@@ -101,27 +101,30 @@ export const api = {
   myWorkout: (id: string) => request<{ workout: Workout }>(`/users/me/workouts/${id}`),
   updateMyWorkout: (
     id: string,
-    body: {
+    input: {
       name: string;
       description?: string;
-      days: string[];
-      exercises: { exercise: string; sets: number; reps: number }[];
+      days?: string[];
+      exercises: Array<{ exercise: string; sets: number; reps: number }>;
     },
   ) =>
     request<{ workout: Workout }>(`/users/me/workouts/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(body),
+      body: JSON.stringify(input),
     }),
   exercises: (params: {
-    page: number;
-    limit: number;
+    page?: number;
+    limit?: number;
     search?: string;
     category?: ExerciseCategory | '';
-  }) => {
-    const query = new URLSearchParams({ page: String(params.page), limit: String(params.limit) });
+  } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
     if (params.search) query.set('search', params.search);
     if (params.category) query.set('category', params.category);
-    return request<{ exercises: Exercise[]; pagination: PageInfo }>(`/exercises?${query}`);
+    const qs = query.toString();
+    return request<{ exercises: Exercise[]; pagination: PageInfo }>(`/exercises${qs ? `?${qs}` : ''}`);
   },
   deleteMyWorkout: (id: string) => request<null>(`/users/me/workouts/${id}`, { method: 'DELETE' }),
 };
