@@ -64,3 +64,37 @@ export interface Workout {
   days: DayOfWeek[];
   exercises: WorkoutExercise[];
 }
+
+export interface ProgressExercise {
+  exercise: { _id: string; name: string };
+  timesDone: number;
+}
+
+/** Resumen del progreso del usuario (GET /users/me/progress). */
+export interface Progress {
+  totalSessions: number;
+  /** Días en los que entrenó, como AAAA-MM-DD y sin repetir. */
+  trainedDays: string[];
+  exercises: ProgressExercise[];
+}
+
+export interface SessionSet {
+  reps: number;
+  weight: number;
+}
+
+export interface SessionExercise {
+  /** Es null si el ejercicio ya no existe en el catálogo. */
+  exercise: Exercise | null;
+  sets: SessionSet[];
+}
+
+/** Un entrenamiento realizado (GET /users/me/sessions). */
+export interface TrainingSession {
+  _id: string;
+  /** Id de la rutina que se hizo. No existe si el entrenamiento se empezó de cero. */
+  workout?: string;
+  startedAt: string;
+  finishedAt: string;
+  exercises: SessionExercise[];
+}
