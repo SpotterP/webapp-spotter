@@ -11,12 +11,17 @@ export function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function onSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    if (password !== confirm) {
+      setError(t('register.mismatch'));
+      return;
+    }
     setBusy(true);
     try {
       await api.register({ name: name.trim(), email: email.trim(), password });
@@ -67,6 +72,18 @@ export function RegisterPage() {
           <small id="password-help" className="caption muted">
             {t('register.passwordHelp')}
           </small>
+        </div>
+        <div className="field">
+          <label htmlFor="confirm-password">{t('register.confirm')}</label>
+          <input
+            id="confirm-password"
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={8}
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+          />
         </div>
         {error && (
           <p className="notice notice--error" role="alert">
