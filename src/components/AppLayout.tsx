@@ -22,7 +22,7 @@ export function AppLayout() {
           </nav>
           <div className="topbar__session">
             <span className="topbar__user body-sm muted">{user?.name}</span>
-            <button type="button" className="button button--secondary button--small" onClick={logout}>
+            <button type="button" className="button button--secondary button--small" onClick={() => void logout()}>
               Cerrar sesión
             </button>
           </div>

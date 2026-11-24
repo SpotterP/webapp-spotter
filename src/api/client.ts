@@ -102,6 +102,10 @@ export const api = {
     publicRequest<{ user: User }>('/auth/register', input),
   login: (input: { email: string; password: string }) =>
     publicRequest<LoginResponse>('/auth/login', input),
+  // Cerrar sesión en el servidor sube el `tokenVersion` del usuario, así que deja de
+  // servir tanto el access token como el refresh token. Sin esta llamada, el refresh
+  // token seguiría siendo válido días después de que el usuario crea que ha salido.
+  logout: () => request<void>('/auth/logout', { method: 'POST' }),
   me: () => request<{ user: User }>('/users/me'),
   myWorkouts: () => request<{ workouts: Workout[] }>('/users/me/workouts'),
   createMyWorkout: (name: string) =>

@@ -53,7 +53,7 @@ export function ProfilePage() {
               <dd>{user.email}</dd>
             </div>
           </dl>
-          <button type="button" className="button button--secondary" onClick={logout}>
+          <button type="button" className="button button--secondary" onClick={() => void logout()}>
             Cerrar sesión
           </button>
         </div>
