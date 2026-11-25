@@ -25,3 +25,8 @@ npm-debug.log*
 # Sistema
 .DS_Store
 Thumbs.db
+
+kanvas.json
+.agents
+.cla*
+AGEN*
