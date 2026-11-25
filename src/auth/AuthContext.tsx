@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { api } from '../api/client';
+import { api, ApiError } from '../api/client';
+import { translate } from '../i18n';
 import type { User } from '../types';
 import { loadSession, saveSession, subscribeSession } from './session';
 import type { Session } from './session';
@@ -8,7 +9,7 @@ import type { Session } from './session';
 interface AuthValue {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -20,10 +21,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const { token, refreshToken, user } = await api.login({ email, password });
-    saveSession({ token, refreshToken, user });
+
+    // Si el navegador no deja guardar la sesión (modo privado, cuota llena), el login
+    // no puede dar por hecho que hay sesión: hay que decírselo al usuario.
+    if (!saveSession({ token, refreshToken, user })) {
+      throw new ApiError(500, translate('errors.storage'));
+    }
   }, []);
 
-  const logout = useCallback(() => saveSession(null), []);
+  const logout = useCallback(async () => {
+    try {
+      // Avisar al servidor invalida los tokens: sin esto, el refresh token seguiría
+      // sirviendo aunque el usuario ya crea que ha cerrado sesión.
+      await api.logout();
+    } catch {
+      // Si el servidor no contesta (red, 5xx) no hay nada más que hacer, pero tampoco
+      // se puede impedir que el usuario salga por eso.
+    } finally {
+      // Pase lo que pase, la sesión local se borra: si no, el usuario se queda pegado
+      // en una pantalla que ya no sirve. Sin sesión guardada, `request()` lanza 401
+      // antes de enviar nada y este mismo camino lo absorbe.
+      saveSession(null);
+    }
+  }, []);
 
   const value = useMemo(
     () => ({ user: session?.user ?? null, login, logout }),

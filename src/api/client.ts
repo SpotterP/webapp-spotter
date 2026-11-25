@@ -1,6 +1,16 @@
 import { API_URL } from '../config';
 import { loadSession, saveSession } from '../auth/session';
-import type { LoginResponse, User, Workout, WorkoutsPage } from '../types';
+import { translate } from '../i18n';
+import type {
+  Exercise,
+  ExerciseCategory,
+  LoginResponse,
+  PageInfo,
+  Progress,
+  TrainingSession,
+  User,
+  Workout,
+} from '../types';
 
 export class ApiError extends Error {
   status: number;
@@ -10,7 +20,25 @@ export class ApiError extends Error {
   }
 }
 
-const TOKEN_EXPIRED = 'El token ha caducado';
+// El backend marca con este código los 401 de token caducado. El refresco se decide por
+// el código y no por el texto del mensaje: una redacción distinta no debe desloguear.
+const TOKEN_EXPIRED_CODE = 'TOKEN_EXPIRED';
+
+// Respaldo temporal para un backend anterior a los códigos (despliegue escalonado): si el
+// cuerpo no trae `code`, se sigue aceptando el mensaje de siempre. No es el criterio
+// principal y se puede borrar cuando el backend con `code` esté desplegado en producción.
+const TOKEN_EXPIRED_MESSAGE = 'El token ha caducado';
+
+/**
+ * Decide si un 401 es un token caducado que merece renovarse. Manda el `code`; el mensaje
+ * solo cuenta cuando el cuerpo no trae código (backend viejo).
+ */
+function isTokenExpired(body: unknown): boolean {
+  if (!body || typeof body !== 'object') return false;
+  const { code, message } = body as { code?: unknown; message?: unknown };
+  if (typeof code === 'string') return code === TOKEN_EXPIRED_CODE;
+  return message === TOKEN_EXPIRED_MESSAGE;
+}
 
 async function parse(response: Response): Promise<unknown> {
   if (response.status === 204) return null;
@@ -24,7 +52,7 @@ async function parse(response: Response): Promise<unknown> {
 function toError(status: number, body: unknown): ApiError {
   const message =
     body && typeof body === 'object' && 'message' in body ? String(body.message) : null;
-  return new ApiError(status, message ?? 'No se ha podido completar la operación');
+  return new ApiError(status, message ?? translate('errors.generic'));
 }
 
 async function send(path: string, init: RequestInit, token?: string): Promise<Response> {
@@ -34,7 +62,7 @@ async function send(path: string, init: RequestInit, token?: string): Promise<Re
   try {
     return await fetch(`${API_URL}${path}`, { ...init, headers });
   } catch {
-    throw new ApiError(0, 'No se puede conectar con el servidor');
+    throw new ApiError(0, translate('errors.network'));
   }
 }
 
@@ -50,7 +78,7 @@ let refreshing: Promise<string> | null = null;
 function refreshToken(): Promise<string> {
   refreshing ??= (async () => {
     const session = loadSession();
-    if (!session) throw new ApiError(401, 'Sesión no iniciada');
+    if (!session) throw new ApiError(401, translate('errors.noSession'));
     try {
       const { token } = await publicRequest<{ token: string }>('/auth/refresh', {
         refreshToken: session.refreshToken,
@@ -58,7 +86,12 @@ function refreshToken(): Promise<string> {
       saveSession({ ...session, token });
       return token;
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) saveSession(null);
+      // Un 401/403 significa que la sesión ya no sirve: se borra para que la UI no siga
+      // creyendo que hay sesión. Un fallo de red, un 5xx o un 429 (demasiados intentos)
+      // son pasajeros y la sesión se conserva.
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+        saveSession(null);
+      }
       throw error;
     } finally {
       refreshing = null;
@@ -69,12 +102,19 @@ function refreshToken(): Promise<string> {
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const session = loadSession();
-  if (!session) throw new ApiError(401, 'Sesión no iniciada');
+  if (!session) {
+    // Sin sesión guardada (otra pestaña la borró, o quedó inválida) hay que avisar a la
+    // UI: si no, queda logueada para siempre mientras todas las peticiones dan 401.
+    saveSession(null);
+    throw new ApiError(401, translate('errors.noSession'));
+  }
 
   let response = await send(path, init, session.token);
   let data = await parse(response);
 
-  if (response.status === 401 && (data as { message?: string } | null)?.message === TOKEN_EXPIRED) {
+  // Solo el token caducado se renueva. Cualquier otro 401 (sesión revocada, token
+  // inválido o ausente) cae abajo, que borra la sesión y propaga el error.
+  if (response.status === 401 && isTokenExpired(data)) {
     const token = await refreshToken();
     response = await send(path, init, token);
     data = await parse(response);
@@ -92,6 +132,49 @@ export const api = {
     publicRequest<{ user: User }>('/auth/register', input),
   login: (input: { email: string; password: string }) =>
     publicRequest<LoginResponse>('/auth/login', input),
-  workouts: () => request<WorkoutsPage>('/workouts?limit=100'),
-  workout: (id: string) => request<{ workout: Workout }>(`/workouts/${id}`),
+  // Cerrar sesión en el servidor sube el `tokenVersion` del usuario, así que deja de
+  // servir tanto el access token como el refresh token. Sin esta llamada, el refresh
+  // token seguiría siendo válido días después de que el usuario crea que ha salido.
+  logout: () => request<void>('/auth/logout', { method: 'POST' }),
+  me: () => request<{ user: User }>('/users/me'),
+  myWorkouts: () => request<{ workouts: Workout[] }>('/users/me/workouts'),
+  myProgress: () => request<{ progress: Progress }>('/users/me/progress'),
+  // 100 es el máximo que da la API en una página
+  mySessions: () =>
+    request<{ sessions: TrainingSession[]; pagination: PageInfo }>('/users/me/sessions?limit=100'),
+  createMyWorkout: (name: string) =>
+    request<{ workout: Workout }>('/users/me/workouts', {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    }),
+  myWorkout: (id: string) => request<{ workout: Workout }>(`/users/me/workouts/${id}`),
+  exercise: (id: string) => request<{ exercise: Exercise }>(`/exercises/${id}`),
+  updateMyWorkout: (
+    id: string,
+    input: {
+      name: string;
+      description?: string;
+      days?: string[];
+      exercises: Array<{ exercise: string; sets: number; reps: number }>;
+    },
+  ) =>
+    request<{ workout: Workout }>(`/users/me/workouts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    }),
+  exercises: (params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    category?: ExerciseCategory | '';
+  } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.search) query.set('search', params.search);
+    if (params.category) query.set('category', params.category);
+    const qs = query.toString();
+    return request<{ exercises: Exercise[]; pagination: PageInfo }>(`/exercises${qs ? `?${qs}` : ''}`);
+  },
+  deleteMyWorkout: (id: string) => request<null>(`/users/me/workouts/${id}`, { method: 'DELETE' }),
 };

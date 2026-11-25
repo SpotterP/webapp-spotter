@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
+import { LanguageSelect } from './LanguageSelect';
 import { Logo } from './Logo';
+import { ThemeToggle } from './ThemeToggle';
 
 export function AuthShell({
   title,
@@ -12,6 +14,10 @@ export function AuthShell({
 }) {
   return (
     <main className="auth">
+      <div className="auth__tools">
+        <LanguageSelect id="auth-lang" compact />
+        <ThemeToggle />
+      </div>
       <div className="auth__card">
         <div className="auth__logo">
           <Logo height={30} />

@@ -1,0 +1,11 @@
+#!/bin/sh
+# Hook de Git: antes de cada commit se pasa el linter. Si encuentra problemas, el commit se cancela.
+# Se activa solo al hacer npm install (el script "prepare" del package.json lo configura).
+
+echo "Pasando el linter..."
+
+if ! npm run lint --silent; then
+    echo ""
+    echo "El linter ha encontrado problemas: arréglalos y vuelve a hacer el commit."
+    exit 1
+fi
