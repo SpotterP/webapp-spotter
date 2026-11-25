@@ -615,21 +615,26 @@ a {
   padding: 0;
   list-style: none;
 }
+/* Nombre | series | reps | acciones: las columnas quedan alineadas entre filas.
+   Todos los controles miden lo mismo de alto y comparten la línea inferior. */
 .exercise-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--space-4);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 80px 80px auto;
+  align-items: end;
+  gap: var(--space-3);
   padding: var(--space-4);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface);
 }
 .exercise-row__name {
-  flex: 1 1 160px;
-  align-self: center;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
   font-family: var(--font-display);
   font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 /* Una referencia que ya no está en el catálogo: se ve distinta para no confundirla con un ejercicio real. */
 .exercise-row--missing {
@@ -641,11 +646,50 @@ a {
   font-style: italic;
 }
 .exercise-row__num {
-  width: 88px;
+  grid-template-columns: minmax(0, 1fr);
+  text-align: center;
+}
+/* Sin width/min-width el input usa su ancho nativo y se sale de la columna. */
+.exercise-row__num input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  background: var(--bg);
+  text-align: center;
 }
 .exercise-row__actions {
   display: flex;
   gap: var(--space-2);
+  margin-left: var(--space-2);
+}
+.exercise-row__actions .button {
+  min-height: 44px;
+}
+.exercise-row__actions .button:not(:last-child) {
+  width: 44px;
+  padding: 0;
+}
+.exercise-row__actions .button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.exercise-row__actions .button:disabled:hover {
+  border-color: var(--border-strong);
+  background: none;
+}
+@media (max-width: 640px) {
+  .exercise-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .exercise-row__name,
+  .exercise-row__actions {
+    grid-column: 1 / -1;
+  }
+  .exercise-row__actions {
+    justify-content: flex-end;
+    margin-left: 0;
+  }
 }
 
 /* Selector de ejercicios */
