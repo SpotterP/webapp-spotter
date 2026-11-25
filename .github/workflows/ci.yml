@@ -58,7 +58,7 @@ jobs:
           context: .
           push: true
           build-args: |
-            VITE_API_URL=${{ vars.VITE_API_URL_TEST || 'http://localhost:1337' }}
+            VITE_API_URL=${{ vars.VITE_API_URL }}
           tags: |
             ${{ env.IMAGE }}:${{ env.BRANCH_TAG }}
             ${{ env.IMAGE }}:sha-${{ github.sha }}
