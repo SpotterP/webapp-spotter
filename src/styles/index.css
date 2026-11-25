@@ -331,6 +331,69 @@ a {
   color: var(--success);
 }
 
+/* Indicador de fortaleza de contraseña */
+.password-strength {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+.password-strength__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.password-strength__badge {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.password-strength__badge--weak {
+  color: var(--danger);
+}
+.password-strength__badge--medium {
+  color: var(--spot-text);
+}
+.password-strength__badge--strong {
+  color: var(--success);
+}
+.password-strength__bars {
+  display: flex;
+  gap: var(--space-1);
+  height: 4px;
+}
+.password-strength__bar {
+  flex: 1;
+  border-radius: var(--radius-full);
+  background: var(--border);
+  transition: background-color var(--motion);
+}
+.password-strength__bar.is-active.is-weak {
+  background: var(--danger);
+}
+.password-strength__bar.is-active.is-medium {
+  background: var(--spot);
+}
+.password-strength__bar.is-active.is-strong {
+  background: var(--success);
+}
+.password-strength__feedback {
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+.password-strength__feedback--missing {
+  color: var(--ink-muted);
+}
+.password-strength__feedback--missing strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.password-strength__feedback--ok {
+  color: var(--success);
+  font-weight: 600;
+}
+
 /* Auth */
 .auth {
   display: grid;
